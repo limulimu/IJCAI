@@ -1,0 +1,444 @@
+%%%% ijcai11.tex
+
+\typeout{IJCAI-13 Instructions for Authors}
+
+% These are the instructions for authors for IJCAI-13.
+% They are the same as the ones for IJCAI-11 with superficical wording
+%   changes only.
+
+\documentclass{article}
+% The file ijcai13.sty is the style file for IJCAI-13 (same as ijcai07.sty).
+\usepackage{ijcai13}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{amssymb}
+\usepackage{mathrsfs}
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{slashbox}
+\usepackage[ruled,vlined]{algorithm2e}
+% Use the postscript times font!
+\usepackage{times}
+\newtheorem{Def}{Definition}[section]
+\newtheorem{The}{Theorem}[section]
+\numberwithin{equation}{section}
+% the following package is optional:
+%\usepackage{latexsym}
+
+% Following comment is from ijcai97-submit.tex:
+% The preparation of these files was supported by Schlumberger Palo Alto
+% Research, AT\&T Bell Laboratories, and Morgan Kaufmann Publishers.
+% Shirley Jowell, of Morgan Kaufmann Publishers, and Peter F.
+% Patel-Schneider, of AT\&T Bell Laboratories collaborated on their
+% preparation.
+
+% These instructions can be modified and used in other conferences as long
+% as credit to the authors and supporting agencies is retained, this notice
+% is not changed, and further modification or reuse is not restricted.
+% Neither Shirley Jowell nor Peter F. Patel-Schneider can be listed as
+% contacts for providing assistance without their prior permission.
+
+% To use for other conferences, change references to files and the
+% conference appropriate and use other authors, contacts, publishers, and
+% organizations.
+% Also change the deadline and address for returning papers and the length and
+% page charge instructions.
+% Put where the files are available in the appropriate places.
+
+\title{Coupled Distance based K-Nearest Weighted Centroid Classification}
+\author{Mu Li \\
+University of Technology, Sydeny\\
+Australia \\
+muli60@gmail.com}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+For the classification task, most of the traditional methods assume independence and identical distribution of objects, attributes and values. However, in the real world data always contains strong coupling between values, attributes and objects. This work involves the coupling similarities from all the three prospective and designed a novel classification method that modified K-Nearest Neighbors into a weighted K-Nearest Centroid which based on coupled similarity. In the values and attributes level, this paper involved coupled similarity metrics for nominal objects, which consider not only intra-coupled similarity within an attribute but also inter-coupled similarity between attributes. In the objects level, this work also proposed a more discriminative weighting method that weighted the centroid object by involving all related objects. The theoretical analysis reveals the superior both efficiency and accuracy than the K-Nearest-Neighbors method, in particular for large-scale data. In addition, experiments on our application data shows a significant efficiency improvement without loss much accuracy by our proposed method, enormous experiments on extensive UCI data sets verify the conclusions, as well.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+Most of the existing classification methods have the same assumption of independent every perspective of data objects, for instance, they not only assume features of the object are independent but also object to object is independent. In contrast, the real world data always come with strong coupled relations and heterogeneity between data objects. For the sake of making the theoretical method more adaptive to the real world data, this work by using the coupled similarity criterion to add both intro-coupled similarity and inter-coupled similarity to to measure the coupled relation between data objects. \cite{Gan:2007} defined a certain similarity measures between attribute values, by gauging the intensity of the relationship between two data objects, the two objects which resemble each other frequently could get larger the similarity between them.
+
+The data objects have two kind of features, the nominal and numerical features. In term of numerical features, their similarity measures by the geometric analogies which represent the relationship of data values. For example, the similarity between $10$ and $12$ are bigger than the similarity between $10$ and $2$. Enormous similarity metrics have been explored for numerical data, such as Euclidean and Minkowski distances \cite{Gan:2007}. By contrast, nominal variables similarity analysis has received much less attention. One the one hand, for supervised learning, Heterogeneous Distances \cite{Wilson:1997} and Modified Value Distance Matrix (\emph{MVDM}) \cite{Cost:1993}, for instance, describe the similarity between categorical values. On the other hand, for unlabeled data, only a few works \cite{Gan:2007}, including Simple Matching Similarity (\emph{SMS}, which only uses $0$s and $1$s to distinguish similarities between distinct and identical categorical values) and Occurrence Frequency \cite{Boriah:2008}, discuss the similarity between nominal values. We illustrate the problem with these works and the challenge of analyzing similarity for categorical data below.
+
+
+
+Taking the Movie data (Table \ref{tab:movie}) as an example, six movie objects are divided into two classes with three nominal features: director, actor and genre. The \emph{SMS} measure between directors ``\emph{Scorsese}'' and ``\emph{Coppola}'' is $0$, but ``\emph{Scorsese}'' and ``\emph{Coppola}'' are very similar directors\footnote{A conclusion drawn  from a well-informed cinematic source.}. Another observation by following \emph{SMS} is that the similarity between ``\emph{Koster}'' and ``\emph{Hitchcock}'' is equal to that between ``\emph{Koster}'' and ``\emph{Coppola}''; however, the similarity of the former pair should be greater since it belongs to the same class $G_2$.
+
+Both instances show that it is much more complex to analyze similarity between nominal variables than continuous data, and \emph{SMS} and its variants fail to capture the genuine relationship between nominal values.
+With the increase of categorical data such as that derived from social networks, it is important to develop effective and efficient measures for capturing similarity between nominal variables.
+
+Thus, we discuss the similarity for categorical values by considering data characteristics. Two attribute values are similar if they present analogous frequency distributions for one attribute \cite{Boriah:2008}; this reflects the intra-coupled similarity within a feature. For example, two directors are very similar if they appear with almost the same frequency, such as ``\emph{Scorsese}'' with ``\emph{Coppola}'' and  ``\emph{Koster}'' with ``\emph{Hitchcock}''. However, the reality is that the former director pair is more similar than the latter. To improve the accuracy of intra-coupled similarity, it is believed that the object co-occurrence probabilities of attribute values induced on other features are comparable \cite{Ahmad2:2007}. To this end, the similarity between directors should also cater for the dependencies on other features such as ``actor'' and ``genre'' over all the movie objects, namely, the inter-coupled similarity between attributes. The coupling relationships between values and between attributes contribute to a more comprehensive understanding of object similarity \cite{Cao:2011}. No work that systematically considers both intra-coupled and inter-coupled similarities has been reported in the literature. This fact leads to the incomplete description of categorical value similarities, and apart from this, the similarity analysis on dependency aggregation is usually very costly.
+
+In this paper, we propose a Coupled Object Similarity (\emph{COS}) measure by considering both Intra-coupled and Inter-coupled Attribute Value Similarities (\emph{IaAVS} and \emph{IeAVS}), which capture the attribute value frequency distribution and feature dependency aggregation with a high learning accuracy and relatively low complexity, respectively. We compare accuracies and efficiencies among the four proposed metrics for \emph{IeAVS}, and come up with an optimal one from both theoretical and experimental aspects; we then evaluate our proposed measure with an existing metric on a variety of benchmark categorical data sets in terms of clustering qualities; and we develop a method to define dissimilarity metrics flexibly with our fundamental similarity building blocks according to specific requirements..
+
+The paper is organized as follows. In Section 2, we briefly review the related work. Preliminary definitions are specified in Section 3. Section 4 proposes the coupled similarities, and the theoretical analysis is given in Section 5. We demonstrate the efficiency and effectiveness of \emph{COS} in Section 6 with experiments. Finally, we end this paper in Section 7.
+
+\section{Problem Statement}
+\label{sec:problem}
+ A large number of data objects with the same features can be organized by an information table $S=<U,A,V,f>$, where $U=\{u_1,\cdots,u_m\}$ is composed of a nonempty finite set of data objects; $A=\{a_1,\cdots,a_n\}$ is a finite set of features; $V=\bigcup^n_{j=1}V_j$ is a set of all attribute values, in which $V_j$ is the set of attribute values of feature $a_j(1\le j\le m)$; and $f=\wedge^n_{j=1}f_j~(f_j:U\rightarrow V_j)$ is an information function which assigns a particular value of each feature to every object. For instance, Table \ref{tab:information table} consists of six objects and three features, with $f_2(u_1)=B_1$ and $V_2=\{B_1,B_2,B_3\}$.
+
+
+Generally speaking, the similarity between two objects $u_{i_1}, u_{i_2}\in U$ is built on top of the similarities within their values $x,y\in V_j$ for all the features $a_j $. The basic concepts below are defined to facilitate the formulation for attribute value similarities, where $|H|$ is the number of elements in $H$.
+\begin{Def}
+Given an information table $S$, three \textbf{Set Information Functions (SIFs)} are defined as $f^*_j:2^U\rightarrow 2^{V_j}$, $g_j:V_j\rightarrow 2^U$, and $g^*_j:2^{V_j}\rightarrow 2^U$. Specifically:
+\begin{gather}
+f^*_j(\{u_{k_1},\cdots,u_{k_t}\})={\{f_j(u_{k_1}),\cdots,f_j(u_{k_t})\}}, \\
+g_j(x)=\{u_i|f_j(u_i)=x,1\leq j\leq n,1\leq i\leq m\}, \\
+g^*_j(W)=\{u_i|f_j(u_i)\in W,1\leq j\leq n,1\leq i\leq m\},
+\end{gather}
+where $u_i,u_{k_1},\cdots,u_{k_t}\in U$, and $W\subseteq V_j$.
+\end{Def}
+
+These \emph{SIF}s describe the relationships between objects and attribute values from different levels. For example, $f^*_2(\{u_1,u_2,$ $u_3\})=\{B_1,B_2\}$, $g_2(B_1)=\{u_1,u_2\}$ for value $B_1$, while $g^*_2(\{B_1,B_2\})=\{u_1,u_2,$  $u_3,u_6\}$ if given $W=\{B_1,B_2\}$.
+
+\begin{Def}
+\label{def:IIF}
+Given an information table $S$, its \textbf{Inter-information Function (IIF)} $\varphi_{j\rightarrow k}: V_j\rightarrow 2^{V_k}$ is defined:
+\begin{equation}
+\label{equ:IIF}
+\varphi_{j\rightarrow k}(x)=f^*_k(g_j(x)).
+\end{equation}
+\end{Def}
+
+This \emph{IIF} $\varphi_{j\rightarrow k}$ is the composition of $f^*_k$ and $g_j$. It obtains the $k$th attribute value subset  for the corresponding objects, which are derived from the $j$th attribute value $x$. For example, $\varphi_{2\rightarrow 1}(B_1)=\{A_1,A_2\}$.
+
+\begin{Def}
+Given an information table $S$, the $k$th attribute value subset $W\subseteq V_k$, and the $j$th attribute value $x\in V_j$, the \textbf{Information Conditional Probability (ICP)} of $W$ with respect to $x$ is $P_{k|j}(W|x)$:
+\begin{equation}
+P_{k|j}(W|x)=\frac{|g^*_k(W)\bigcap g_j(x)|}{|g_j(x)|}.
+\end{equation}
+\end{Def}
+
+Intuitively, when given all the objects with the $j$th attribute value $x$, \emph{ICP} is the percentage of the common objects whose $k$th attribute values fall in subset $W$ and $j$th attribute value is exactly $x$ as well. For example, $P_{1|2}(\{A_1\}|B_1)=0.5$.
+
+All these concepts and functions are composed to formalize the so-called coupled interactions between categorical attribute values, as presented below.
+
+\section{Coupled Similarities}
+In this section, \emph{\textbf{Coupled Attribute Value Similarity (CAVS)}} is proposed in terms of both intra-coupled and inter-coupled value similarities. When we consider the similarity between attribute values, ``intra-coupled'' indicates the involvement of attribute value occurrence frequencies within one feature, while the ``inter-coupled'' means the interaction of other features with this attribute. For example, the coupled value similarity between $B_1$ and $B_2$ concerns both the intra-coupled relationship specified by the repeated times of values $B_1$ and $B_2$: 2 and 2, and the inter-coupled interaction triggered by the other two features ($a_1$ and $a_3$).
+
+Suppose we have the \emph{\textbf{Intra-coupled Attribute Value Similarity (IaAVS)}} measure $\delta_{j}^{Ia}(x,y)$ and \emph{\textbf{Inter-coupled Attribute Value Similarity  (IeAVS)}} measure $\delta_{j}^{Ie}(x,y)$ for feature $a_j$ and $x,y\in V_j$, then \emph{CAVS} $\delta^{A}_{j}(x,y)$ is naturally derived by simultaneously considering both of them.
+
+\begin{Def}
+Given an information table $S$, the \textbf{Coupled Attribute Value Similarity (CAVS)} between attribute values $x$  and $y$ of feature $a_j$ is:
+\begin{equation}
+\delta^{A}_{j}(x,y)=\delta_{j}^{Ia}(x,y)\cdot\delta_{j}^{Ie}(x,y)
+\label{eq:CAVS}
+\end{equation}
+where $\delta_{j}^{Ia}$ and $\delta_{j}^{Ie}$ are IaAVS and IeAVS, respectively.
+\end{Def}
+
+\subsection{Intra-coupled Interaction}
+According to \cite{Gan:2007}, it is a fact that the discrepancy of attribute value occurrence times reflects the value similarity in terms of frequency distribution. Thus, when calculating attribute value similarity, we consider the relationship between attribute value frequencies on one feature, proposed as intra-coupled similarity in the following.
+
+\begin{Def}
+Given an information table $S$, the \textbf{Intra-coupled Attribute Value Similarity (IaAVS)} between attribute values $x$  and $y$ of feature $a_j$ is:
+\begin{equation}
+\delta_{j}^{Ia}(x,y)=\frac{|g_j(x)|\cdot|g_j(y)|}{|g_j(x)|+|g_j(y)|+|g_j(x)|\cdot|g_j(y)|}.
+\label{eq:IaAVS}
+\end{equation}
+\end{Def}
+
+In this way, different occurrence frequencies indicate distinct levels of attribute value significance. Gan et al. \cite{Gan:2007} reveal that greater similarity is assigned to the attribute value pair which owns approximately equal frequencies. The higher these frequencies are, the closer such two values are. Thus, function (\ref{eq:IaAVS}) is designed to satisfy these two principles. Besides, since $1\le |g_j(x)|,|g_j(y)|\le m$, then $\delta_{j}^{Ia}\in[1/3,m/(m+2)]$. For example, in Table , both values $B_1$ and $B_2$ are observed twice, so $\delta_{2}^{Ia}(B_1,B_2)=0.5$.
+
+Hence, by taking into account the frequencies of categories, an effective measure (\emph{IaAVS}) has been captured to characterize the value similarity in terms of occurrence times.
+
+\subsection{Inter-coupled Interaction}
+
+In terms of \emph{IaAVS}, we have considered the intra-coupled similarity, i.e., the interaction of attribute values within one feature $a_j$. This does not, however, involve the couplings between other features $a_k(k\neq j)$ and feature $a_j$ when calculating attribute value similarity. Accordingly, we discuss this dependency aggregation, i.e., inter-coupled interaction.
+
+In 1993, Cost and Salzberg \cite{Cost:1993} proposed a powerful method, \emph{MVDM}, for measuring the dissimilarity between categorical values. \emph{MVDM} considers the overall similarities of classification of all objects on each possible value of each feature. The idea is that attribute values are identified as being similar if they occur with the same relative frequency for all classifications. In the absence of labels, the above measure is adapted to satisfy our target problem by replacing the class label with some other feature to enable unsupervised learning. We regard this interaction between features as inter-coupled similarity in terms of the co-occurrence comparisons of \emph{ICP}. The most intuitive variant is \emph{IRSP}:
+
+\begin{Def}
+Given an information table $S$, the \textbf{Inter-coupled Relative Similarity based on Power Set (IRSP)} between attribute values $x$  and $y$ of feature $a_j$  based on another feature $a_k$ is:
+\begin{equation}
+\delta_{j|k}^P(x,y)=\min_{W\subseteq V_k}\{2-P_{k|j}(W|x)-P_{k|j}(\overline{W}|y)\},
+\label{eq:IRSP}
+\end{equation}
+where $\overline{W}=V_k\backslash W$ is the complementary set of a set $W$ under the complete set $V_k$.
+\end{Def}
+
+In fact, two attribute values are closer to each other if they have more similar probabilities with other attribute value subsets in terms of co-occurrence object frequencies. In Table \ref{tab:information table}, by employing (\ref{eq:IRSP}), we want to get $\delta_{2|1}^P(B_1,B_2)$, i.e. the similarity between two attribute values $B_1,B_2$ of feature $a_2$ regarding feature $a_1$. Since the set of all attribute values of feature $a_1$  is $V_1=\{A_1,A_2,A_3,A_4\}$, the number of all power sets within $V_1$  is $2^4$, i.e., the number of the combinations consisting of $W\subseteq V_1$ and $\overline{W}\subseteq V_1$  is $2^4$. The minimal value among them is 0.5, which indicates that similarity $\delta_{2|1}^P(B_1,B_2)= 0.5$.
+
+This process shows the combinational explosion brought about by the power set needs to be considered when calculating attribute value similarity by \emph{IRSP}. We therefore try to define three more similarities based on \emph{IRSP} as follows.
+
+\begin{Def}
+Given an information table $S$, the \textbf{Inter-coupled Relative Similarity based on Universal Set (IRSU), Join Set (IRSJ), and Intersection Set (IRSI)} between attribute values $x$  and $y$ of feature $a_j$  based on another feature $a_k$ are the following formulae respectively:
+\begin{eqnarray}
+\delta_{j|k}^U(x,y)=2-\sum_{w\in V_k}\max\{P_{k|j}(\{w\}|x),P_{k|j}(\{w\}|y)\},  \label{eq:IRSU} \\
+\delta_{j|k}^J(x,y)=2- \sum_{w\in\bigcup}\max\{P_{k|j}(\{w\}|x),P_{k|j}(\{w\}|y)\}, \label{eq:IRSJ} \\
+\delta_{j|k}^I(x,y)=\sum_{w\in\bigcap}\min\{P_{k|j}(\{w\}|x),P_{k|j}(\{w\}|y)\}, \label{eq:IRSI}
+\end{eqnarray}
+where $w\in\bigcup$ and $w\in\bigcap$ denote $w\in \varphi_{j\rightarrow k}(x)\bigcup\varphi_{j\rightarrow k}(y)$ and $w\in \varphi_{j\rightarrow k}(x)\bigcap\varphi_{j\rightarrow k}(y)$, respectively.
+\end{Def}
+
+Each $k$th attribute value $w\in V_k$, rather than its value subset $W\subseteq V_k$, is considered to reduce computational complexity. In this way, \emph{IRSU} is applied to compute similarity $\delta_{2|1}^U(B_1,B_2)$, and we get $\delta_{2|1}^U(B_1,B_2)=0.5$. Since \emph{IRSU} only concerns all the single attribute values rather than exploring the whole power set, it has solved the combinational explosion issue to a great extent. In \emph{IRSU}, \emph{ICP} is merely calculated  8 times compared with 32 times by \emph{IRSP}, which leads to a substantial improvement in efficiency. Then with (\ref{eq:IRSJ}), the calculation of  $\delta_{2|1}^J(B_1,B_2)$  is further simplified since $A_3\not\in\varphi_{2\rightarrow 1}(B_1)\bigcup\varphi_{2\rightarrow 1}(B_2)$. Thus, we obtain  $\delta_{2|1}^J(B_1,B_2)=0.5$, which reveals the fact that it is enough to compute \emph{ICP} with $w\in V_1$ that belongs to $\varphi_{2\rightarrow 1}(B_1)\bigcup\varphi_{2\rightarrow 1}$ $(B_2)$ instead of all the elements in $V_1$. From this perspective, \emph{IRSJ} reduces the complexity further when compared with \emph{IRSU}. Based on \emph{IRSU}, an alternative \emph{IRSI} is considered. For example, with (\ref{eq:IRSI}), the calculation of  $\delta_{2|1}^I(B_1,B_2)$ is once again simplified since only $A_2\in\varphi_{2\rightarrow 1}(B_1)$ $\bigcap\varphi_{2\rightarrow 1}(B_2)$. Then, we easily get $\delta_{2|1}^I(B_1,B_2)=0.5$. In this case, it is sufficient to compute \emph{ICP} with $w\in V_1$ which only belongs to $\varphi_{2\rightarrow 1}(B_1)\bigcap\varphi_{2\rightarrow 1}(B_2)$. It is trivial that the cardinality of intersection $\bigcap$ is no larger than that of join set $\bigcup$. Thus, \emph{IRSI} is further more efficient than \emph{IRSU} due to the reduction of intra-coupled relative similarity complexity.
+
+Intuitively speaking, it is a fact that \emph{IRSI} is the most efficient of all the proposed inter-coupled relative similarity measures: \emph{IRSP}, \emph{IRSU}, \emph{IRSJ}, \emph{IRSI}. In addition, all four measures lead to the same similarity result, such as $0.5$.
+
+According to the above discussion, we can naturally define the similarity between the $j$th attribute value pair $(x,y)$ on top of these four optional measures by aggregating all the relative similarities on features other than attribute $a_j$.
+
+\begin{Def}
+\label{def:IeAVS}
+Given an information table $S$, the \textbf{Inter-coupled Attribute Value Similarity (IeAVS)} between attribute values $x$  and $y$ of feature $a_j$ is:
+\begin{equation}
+\delta_{j}^{Ie}(x,y)=\sum_{k=1,k\neq j}^n\alpha_k\delta_{j|k}(x,y),
+\label{eq:IeAVS}
+\end{equation}
+where $\alpha_k$ is the weight parameter for feature $a_k$, $\sum_{k=1}^n\alpha_k=1$, $\alpha_k\in[0,1]$, and $\delta_{j|k}(x,y)$ is one of the inter-coupled relative similarity candidates.
+\end{Def}
+
+Accordingly, we have $\delta_{j}^{Ie}\in[0,1]$, then $\delta_{j}^A=\delta_{j}^{Ia}\cdot\delta_{j}^{Ie}\in[0,m/(m+2)]$ since $\delta_{j}^{Ia}\in[1/3,m/(m+2)]$. In Table \ref{tab:information table}, for example, $\delta_{2}^{Ie}(B_1,B_2)=0.5\cdot\delta_{2|1}(B_1,B_2)+0.5\cdot\delta_{2|3}(B_1,B_2)=(0.5+0)/2=0.25$ if $\alpha_1=\alpha_3=0.5$ is taken with equal weight. Furthermore, coupled attribute value similarity (\ref{eq:CAVS}) is obtained as  $\delta^A_2(B_1,B_2)=\delta_{2}^{Ia}(B_1,B_2)\cdot\delta_{2}^{Ie}(B_1,B_2)=0.5\times0.25=0.125$. For the Movie data set in Section \ref{sec:introduction}, then $\delta^A_{Director}(Scorsese,Coppola)=\delta^A_{Director}(Coppola,Coppola)$ $=0.33$, and $\delta^A_{Director}$ $( Koster,$ $Coppola)=0$ while $\delta^A_{Director}$ $( Koster,Hitchcock)=0.25$. They correspond to the fact that ``\emph{Scorsese}'' and ``\emph{Coppola}'' are very similar directors just as ``\emph{Coppola}'' is to himself, and the similarity between ``\emph{Koster}'' and ``\emph{Hitchcock}'' is larger than that between ``\emph{Koster}'' and ``\emph{Coppola}'', as clarified in Section \ref{sec:introduction}.
+
+After specifying \emph{IaAVS} and \emph{IeAVS}, a coupled similarity between objects is built based on \emph{CAVS}. Then, we consider the sum of all these \emph{CAVS}s analogous to the construction of Manhattan dissimilarity \cite{Gan:2007}. Formally, we have:
+\begin{Def}
+\label{def:COS}
+Given an information table $S$, the \textbf{Coupled Object Similarity (COS)} between objects $u_{i_1}$ and $u_{i_2}$:
+\begin{equation}
+COS(u_{i_1},u_{i_2})=\sum_{j=1}^n\delta^A_j(x_{i_1j},x_{i_2j}),
+\label{eq:COS}
+\end{equation}
+where $\delta^A_j$ is the \emph{CAVS} measure defined in (\ref{eq:CAVS}), $x_{i_1j}$ and $x_{i_2j}$ are the attribute values of feature $a_j$ for objects $u_{i_1}$ and $u_{i_2}$ respectively, and $1\le i_1,i_2\le m$, $1\le j\le n$.
+\end{Def}
+
+For \emph{COS}, all the \emph{CAVS}s with each feature are summed up for two objects. For example (Table \ref{tab:information table}), $COS(u_2,u_3)=\sum_{j=1}^3\delta_j(x_{2j},x_{3j})$ $=0.5+0.125+0.125=0.75$.
+
+\section{Coupled Similarities Based Classification}
+
+In this section, we proposed a novel classification method based on the coupled similarity metric.
+Given a data set $\mathcal{D}$ =$\{d_{1},d_{2},\ldots,d_{n}\}$ , and $\Pi$=$\{\pi_{1},\pi_{2},\ldots,\pi_{n}\}$ are the
+classes of the data set. This work aims to extract more information between feature to feature and feature to class by applying the coupled similarities or it can be named as coupled distance. In terms of the distance based classification task, the K-Nearest-Neighbors(KNN) is the most popular method; however, it lack of efficiency when it does the classification. In detail, when the $KNN$ algorithm does the classification task, it needs to compute the distance between the given object $d_{n}$ to each of others objects in $\mathcal{D}$  to find the K-nearest objects, and then to judge whether this object is belonged to which cluster. In contrast, we proposed a method that only calculate the distance between the object to the cluster's centroid, which dramatically reduce the comparison time \ref{compare}, the more training set you have the more time you will save.  Actually, this is a generalized process to find the most representative object to stand for the similar objects within one cluster. Moreover, this work also proposed a novel method to improve  KNN classification's weakness. As KNN is based on equivalent significance to neighbors, this work adds weight to every object to enhance the discriminative power. The experiments show that the proposed method reduces the time of classification substantially, and it does not lose classification accuracy.
+
+\begin{figure}
+ \centering
+  \includegraphics[width=6cm]{compare.eps}
+ \caption{Comparatione Times with and without Clustering}
+ \label{compare}
+\end{figure}
+
+\subsection{Clustering Within the Class with Coupled Similarities}
+
+In this section, a coupled similarities based clustering method will be illustrated. Firstly, by the $Defination$\ref{def:COS}, a coupled similarity between two objects $COS(d_i,d_j)$ can be calculated. After that, for the classification task, we compute the coupled similarities within one class first because we assume there might be more coupled relations within one class than between two classes. In order to enhance the speed of the clustering process, we enumerated all the object within the data set $\mathcal{D}=\{d_{1},d_{2},\ldots,d_{n}\}$ in to a comparison table $Tabel$\ref{tabel} and then calculated the coupled similarities between each of them. Since our definition of similarity is a relative value, it only can be applied when given two objects, which means it cannot create a middle point of two objects. Furthermore, the mean of two categorical attribute cannot be calculated as well, for instance, it is hard to say what gender is between male and female. As a result, the traditional clustering method like K-Means cannot be applied directly, because it couldn't find the mean point within a group of objects. To solve this problem, we used the Spherical K-Means clustering method to instead of K-Means as our clustering method.
+
+\begin{table}
+\caption{Coupled Similarity Between Objects}
+\centering
+\begin{tabular}{|c|c|}
+  \hline
+  % after \\: \hline or \cline{col1-col2} \cline{col3-col4} ...
+  Object Pairs & Similarity\\
+  \hline
+  $d_{1},d_{2}$ & 0.23 \\
+  \hline
+  $d_{1},d_{3}$ & 0.31 \\
+  \hline
+  . & . \\
+  . & . \\
+  . & . \\
+  \hline
+  $d_{n},d_{m}$ & $s$ \\
+ \hline
+\end{tabular}
+\label{tabel}
+\end{table}
+
+\subsubsection{Spherical K-Means Clustering using Coupled Similarities}
+Let $d_{1},d_{2}$ be two categorical object from the data set $\mathcal{D}=\{d_{1},d_{2},\ldots,d_{n}\}$, the similarities among the objects is based on the definition 3.8. The clustering process is to partition the data set $\mathcal{D}$ into $T$ clusters, each of the cluster can be named as $\mathcal{C}=\{c_{1},c_{2},\ldots,c_{t}\}$ respectively. The perfect solution can be formally describe as the following maximization problem:
+\begin{equation}
+ \{c_{t}\}^{k}_{j=1}=\underset{\{c_{t}\}^{k}_{t=1}}{\operatorname{arg\,max}}\sum^{k}_{t=1}\sum_{d_{i}\in{c_t}}Cos(m_{t},d_{i})
+ \end{equation}
+ $\{c_{t}\}=\{d_{t1},d_{t2},\ldots,d_{tn}\}$ is a cluster with certain objects, A centroid point $m_{t}$ of cluster ${c_{t}}$ is a object within the $c_{t}$ which has the minimal similarity to all other objects within the cluster, for any object $d'$ in ${c_{t}}$, the centroid point $m_{t}$ that
+  \begin{equation}
+   \sum_{d_{i}\in{c_{t}}}Cos(m_{t},d_{i})\leq\sum_{d_{i}\in{c_{t}}}Cos(d',d_{i})
+ \end{equation}
+  The clustering method is straightforward, very similar to K-Means. Firstly, it randomly chooses K object from data set $\mathcal{D}$ as the centroid object ${m_{k}}$, $m$ stands for the temp mode of the cluster and $k$ is the cluster id for each cluster. Secondly, it allocates each object ${d_{n}}$ to theirs nearest centroid object ${m_{k}}$ as a intermediate cluster $c_{k}$, where $c_{k}$ contains a set of objects $\{d_{k1},d_{k2},\ldots,d_{kn}\}$ which are the nearest objects to this centroid object ${m_{k}}$. Thirdly, it searches for a new centroid object within each cluster $c_{k}$, the new centroid object is the object which has minimal similarity to all other object with in the cluster.When the new centroid object has been confirmed, repeat to assign each object to the new centroid object to reform the cluster. Finally, iterate the process until the centroid object is fixed for any cluster $c_{t}$.
+     \begin{equation}
+   m^{n}_{t}=m^{n+1}_{t}
+ \end{equation}
+ $n$ stands for the iteration times. Meanwhile, in some extreme case, the centroid object cannot be fixed at all, there is an alternative criterion that
+       \begin{equation}
+   |(\sum^{k}_{t=1}\sum_{d_{i}\in{c_t}}Cos(m_{t},d_{i}))^{n}- (\sum^{k}_{t=1}\sum_{d_{i}\in{c_t}}Cos(m_{t},d_{i}))^{n+1}|\leq\varepsilon
+ \end{equation}
+ Same as above $n$ is the iteration times, $\varepsilon$ is the certain threshold, if the "change" of the cluster after iteration is not significant, the searching algorithm will stop.
+   The Spherical K-Means clustering method prevents the problems which K-Means leads to, thus it suitable for our coupled similarity based clustering.
+
+\subsubsection{Classification with Coupled Similarities Weighted Cluster Centroid}
+For simplify the problem, we take the binary classification task as an example, once the clustering process has been finished, we have several clusters within both positive class $\pi_{A}$ and negative class $\pi_{B}$. Moreover, each centroid of the cluster has its unique value for classification, due to the difference of coupled similarity between them are substantial. The coupled similarity cannot be expressed in the 2D space ,since all the similarities are relative and cannot be drown on one flat picture. However, for simplicity, we use the following figure to illustrated the different similarities between clusters.
+
+\begin{figure}
+ \centering
+  \includegraphics[width=4cm]{cluster.eps}
+ \caption{The training data set after clustering}
+ \label{cluster}
+\end{figure}
+
+As the \ref{cluster} shows, each circular stands for a cluster, and the caption of the circular $C_{\pi_{A}}$ and $C_{\pi_{B}}$ stand for centroid object in both the positive class and negative class respectively, moreover, we also use the different color to present the clusters which belongs to a different class. The $\phi_{1}$ and $\phi_{2}$ is the coupled similarity between two centroid $C_{\pi_{A3}}$ and $C_{\pi_{B5}}$ and $C_{\pi_{A2}}$ and $C_{\pi_{B2}}$. Apparently, the coupled similarity $\phi_{2}$ is significantly larger than $\phi_{1}$. When doing a classification task, the difference of distance will affect the result remarkably. Unfortunately, the classic KNN algorithm neglect this difference and judge every point as equivalent significance. More precisely, when it does a classification job with an incoming object $d_{n}$, and it only counts the amount of the $k$ nearest neighbors $Count(\chi^{k}(d_{n}))$ belong to each class, where the $\chi^{k}(d_{n})$ denote to the set of the nearest neighbors of object $d_{n}$, and if the number of neighbors belong to class A larger than the number of neighbors belong to class B then classified the object to class A, without considering the unique value of each of its neighbors. Let $F$ be the classification function, the classification process of traditional KNN can be describe as:
+  \begin{equation}
+   F(d_{n})=\left\{
+\begin{aligned}
+d_{n}\in \pi_{A} &    &   Count(\chi^{k}(d_n)\in\pi_{A})>\\&&Count(\chi^{k}(d_n)\in\pi_{A})\\
+d_{n}\in \pi_{B} &    &   Count(\chi^{k}(d_n)\in\pi_{B})>\\&&Count(\chi^{k}(d_n)\in\pi_{A})\\
+\end{aligned}
+\right.
+ \end{equation}
+This work proposed a novel classifier with weighted cluster centroid, which comprehensively involved the information of the coupled similarity from every centroid object $C_{\pi_{A}}$ in one class $\pi_{A}$ to all other objects $d_{\pi_{\bar{A}}}^{j}$  belongs to the opposite class $\pi_{\bar{A}}$. The reason is that, by the concept of coupling, every object can be described by others object, which have relation to it. After that this work by utilizing this information to make a certain weight to each centroid object.The computation of coupled similarities weight is quite straightforward:
+  \begin{equation}
+   W(C_{\pi_{An}})=\sum_{i=1}^{m}\sum_{j=1}^{n}Cos(d_{\pi_{A}}^{i},d_{\pi_{\bar{A}}}^{j})
+ \end{equation}
+Finally, to classify a incoming object by accumulating the coupled similarities to every centroid object and adding those weights. The classification function is becoming:
+  \begin{equation}
+   F(d_{n})=\left\{
+\begin{aligned}
+d_{n}\in \pi_{A} &    &  \sum_{i=1}^{k}W(\chi^{k}(d_n)\in\pi_{A})>  \\
+&&\sum_{i=1}^{k}W(\chi^{k}(d_n)\in\pi_{B})\\
+d_{n}\in \pi_{B} &    &   \sum_{i=1}^{k}W(\chi^{k}(d_n)\in\pi_{B})>  \\
+&&\sum_{i=1}^{k}W(\chi^{k}(d_n)\in\pi_{A})
+\end{aligned}
+\right.
+ \end{equation}
+
+\section{Experiment and Evaluation}
+In this section, several experiments are performed on extensive UCI data sets to show the effectiveness and efficiency of our proposed coupled similarities. The experiments are divided into two categories: coupled similarity comparison and \emph{COS} application. For simplicity, we just assign the weight vector $\alpha=(\alpha_k)_{1\times n}$ with values $\alpha(k)=1/n$ in (\ref{eq:IeAVS}).
+
+\subsection{Coupled Similarity Comparison}
+ To compare efficiencies, we conduct extensive experiments on the inter-coupled relative similarity metrics: \emph{IRSP}, \emph{IRSU}, \emph{IRSJ}, and \emph{IRSI}. The goal in this set of experiments is to show the obvious superiority of \emph{IRSI}, compared with the most time-consuming measure \emph{IRSP}. As discussed in Section \ref{sec:accuracy}, the computational complexity linearly depends on the time costs of \emph{ICP} with given data. Thus, we consider a comparison of complexities represented by the time costs of \emph{ICP}. Also explained in Section \ref{sec:accuracy}, the complexity for \emph{IRSP} is $O(n^2R^22^R)$, while the other three have equal smaller complexity $O(n^2R^3)$. Here, scalability analysis is explored in terms of these two factors separately: the number of features $|A|$ and the maximal number of attribute values $R$.
+
+\textbf{From the perspective of $|A|$}, Soybean-large data set is considered with $307$ objects and $35$ features. Here, we fix $R$ to be $7$, and focus on $|A|$ ranging from $5$ to $35$ with step $5$. In terms of the total time costs of \emph{ICP}, the computational complexity comparisons among four measures (\emph{IRSP}, \emph{IRSU}, \emph{IRSJ}, and \emph{IRSI}) are depicted in Figure \ref{fig:scalability F}($|A|$). The result indicates that the complexities of all these measures keep increasing when $|A|$ becomes larger. The acceleration of \emph{IRSP} (from $3328$ to $74128$) is the greatest compared with the slightest acceleration of \emph{IRSI} (from $632$ to $15704$). Apart from these two, the scalability curves are almost the same for \emph{IRSU} and \emph{IRSI}, though the complexity of \emph{IRSU} is slightly higher than that of \emph{IRSJ} with varied $|A|$. Therefore, \emph{IRSI} is the most stable and efficient measure to calculate the intra-coupled relative similarity in terms of $|A|$.
+
+
+
+\textbf{From the perspective of $R$}, the variation of  $R$ is considered when $|A|$ is confirmed. Here, we take advantage of the Adult data set with $30718$ objects and $13$ features chosen. Specifically, the integer feature ``fnlwgt'' is discretized into different intervals (from 10 to 10000) to form distinct $R$ ranging from 16 to 10000, since one of the existing categorial attributes ``education'' already has 16 values. The outcomes are shown in Figure \ref{fig:scalability F}($R$), in which the horizontal axis refers to $R$, and the vertical axis indicates the relative complexity ratios in terms of $\xi(J/U)$, $\xi(I/J)$, and $\xi(I/U)$. From this figure, we observe all the ratios between $10\%$ and $100\%$, which again verifies the complexity order for these four measures indicated in Section \ref{sec:accuracy}. Another issue is that all three curves decrease as $R$ grows, which means the efficiency advantages of  \emph{IRSJ} upon \emph{IRSU} (from $85.5\%$ to $46.8\%$), \emph{IRSI} upon \emph{IRSJ} (from $78.2\%$ to $40.2\%$), and \emph{IRSI} upon \emph{IRSU} (from $66.9\%$ to $18.8\%$) all become more and more obvious with the increasing of $R$. The general trend of these ratios always falling comes from the fact that there is a higher probability of getting a join set smaller than the whole set, and an intersection set smaller than the join set, with larger $R$. The same conclusion also holds for the ratio $\xi(U/P)$, but this is due to the fact that $q^{-1}(x)=x/2^x$ is a strictly monotonously decreasing function when $x>1$. We omit this ratio in Figure \ref{fig:scalability F}($R$) since the denominator $|ICP^{(P)}|$ becomes exponentially  large when $R$ grows, e.g., it equals to $5.12\times 10^{83}$ when $R=500$. Hence, \emph{IRSI} is the least time-consuming intra-coupled similarity with regard to $R$.
+
+\vspace{0.1cm}
+In summary, all the above experiment results clearly show that \emph{IRSI} outperforms \emph{IRSP}, \emph{IRSU}, and \emph{IRSJ} in terms of the computational complexity. In particular, with the increasing numbers of either features or attribute values, \emph{IRSI} demonstrates superior efficiency compared to the others. \emph{IRSJ} and \emph{IRSU} follow, with \emph{IRSP} being the most time-consuming, especially for the large-scale data set.
+
+\subsection{Application}
+In this part of our experiments, we focus on the computational accuracy comparison. In the following, we evaluate the \emph{COD} which is derived from (\ref{eq:COS}):
+\begin{equation}
+COD(u_{i_1},u_{i_2})=\sum_{j=1}^n h_1(\delta_{j}^{Ia}(x_{i_1j},x_{i_2j}))\cdot h_2(\delta_{j}^{Ie}(x_{i_1j},x_{i_2j})),
+\label{eq:IeD}
+\end{equation}
+where $h_1(t)$ and $h_2(t)$ are decreasing functions. Based on intra-coupled and inter-coupled similarities, $h_1(t)$ and $h_2(t)$ can be flexibly chosen to build dissimilarity measures according to specific requirements. Here, we consider $h_1(t)=1/t-1$ and $h_2(t)=1-t$ to reflect the complementarity of similarity and dissimilarity measures.  In terms of the capability on revealing the relationship between data, the better the dissimilarity induced, the better is its similarity.
+
+To demonstrate the effectiveness of our proposed \emph{COD} in application, we compare two clustering methods based on two dissimilarity metrics on six data sets. Here, \emph{COD} is used with the outperforming measure \emph{IRSI}.
+
+One of the clustering approaches is the k-modes  (\emph{KM}) algorithm \cite{Gan:2007}, designed to cluster categorical data sets. The main idea of \emph{KM} is to specify the number of clusters $k$ and then to select $k$ initial modes, followed by allocating every object to the nearest mode. The other is a branch of graph-based clustering, i.e., spectral clustering (\emph{SC}) \cite{Luxburg:2007}, which makes use of the Laplacian Eigenmaps on dissimilarity matrix to perform dimensionality reduction for clustering prior to the k-means algorithm. In respect of feature dependency aggregations, however, Ahmad and Dey \cite{Ahmad2:2007} evidenced that their proposed metric \emph{ADD} outperforms \emph{SMD} in terms of \emph{KM} clustering. Thus, we aim to compare the performances of \emph{ADD} \cite{Ahmad2:2007} and \emph{COD}  (\ref{eq:IeD}) for further clustering evaluations.
+
+We conduct four groups of experiments on the same data sets: \emph{KM} with \emph{ADD}, \emph{KM} with\emph{COD}, \emph{SC} with \emph{ADD}, and \emph{SC} with\emph{COD}. The clustering performance is evaluated by comparing the obtained cluster of each object with that provided by the data label in terms of accuracy (\emph{AC}) and normalized mutual information (\emph{NMI}) \cite{Cai:2005}. \emph{AC}$\in[0,1]$ is a degree of closeness between the obtained clusters and its actual data labels, while \emph{NMI}$\in[0,1]$ is a quantity that measures the mutual dependence of two variables: clusters and labels. \emph{AC}$=1$ or \emph{NMI}$=1$ if the clusters and labels are identical, and \emph{AC}$=0$ or \emph{NMI}$=0$ if the two sets are independent. In fact, the larger \emph{AC} or \emph{NMI} is, the better the clustering is, and the better the corresponding dissimilarity metric is.
+
+
+
+Figure \ref{fig:AC NMI} reports the results on six data sets with different $|U|$, ranging from 15 to 699 in increasing order. In terms of \emph{AC} and \emph{NMI}, the evaluations are conducted with \emph{KM-ADD}, \emph{KM-COD}, \emph{SC-ADD}, and \emph{SC-COD} individually. Followed by Laplacian Eigenmaps, the subspace dimensions are determined by the number of labels in \emph{SC}. For each data set, the average performance is computed over 100 tests for \emph{KM} and k-means in \emph{SC} with distinct start points.
+
+As can be clearly seen from Figure \ref{fig:AC NMI}, the clustering methods with \emph{COD}, whether \emph{KM} or \emph{SC}, outperform those with \emph{ADD} in terms of both \emph{AC} and \emph{NMI} measures. That is to say, dissimilarity metric \emph{COD} is better than $ADD$ on clustering qualities. Specifically for \emph{KM}, the \emph{AC} improving rate ranges from $5.56\%$ (Balloon) to $16.50\%$ (Zoo), while the \emph{NMI} improving rate falls within $4.76\%$ (Soybean-s) and $37.38\%$ (Breastcancer). With regard to \emph{SC}, the former rate takes the minimal and maximal ratios as $4.21\%$ (Balloon) and $20.84\%$ (Soybean-l), respectively; however, the latter rate belongs to $[5.45\%~\text{(Soybean-l)},38.12\%$ $\text{(Shuttle)}]$. Since \emph{AC} and \emph{NMI} evaluate clustering quality from different aspects, they generally take minimal and maximal ratios on distinct data sets. Another significant observation is that \emph{SC } mostly outperforms \emph{KM} a little whenever it has the same dissimilarity metric; in fact, Luxburg \cite{Luxburg:2007} has indicated that \emph{SC} very often outperforms k-means for numerical data.
+
+\vspace{0.08cm}
+We draw the following two conclusions: 1) intra-coupled relative similarity \emph{IRSI} is the most efficient one when compared with \emph{IRSP}, \emph{IRSU} and \emph{IRSJ}, especially for large-scale data; 2) our proposed object dissimilarity metric \emph{COD} is better than others, such as dependency aggregation only \emph{ADD}, for categorical data in terms of clustering qualities.
+
+\section{Conclusion}
+We have proposed \emph{COS}, a novel coupled object similarity metric which involves both attribute value frequency distribution (intra-coupling) and feature dependency aggregation (inter-coupling) in measuring attribute value similarity for unsupervised learning of nominal data. Theoretical analysis and substantial experiments have shown that  inter-coupled relative similarity measure \emph{IRSI} significantly outperforms the others (\emph{IRSP}, \emph{IRSU}, \emph{IRSJ}) in terms of efficiency, in particular on large-scale data, while maintaining equal accuracy. Moreover, our derived dissimilarity metric is more comprehensive and accurate in capturing the clustering qualities in accordance with substantial empirical results.
+
+We are currently applying the \emph{COS} measure with \emph{IRSI} to feature discretization, clustering ensemble, and other data mining tasks. We are also considering extending the notion of ``coupling'' for the similarity of numerical data. Moreover, the proposed concepts \emph{Inter-information Function} and \emph{Information Conditional Probability} for the information table have potential for other applications.
+
+\section{Acknowledgment}
+This work is sponsored by Australian Research Council Grants (DP1096218, DP0988016, LP100200774, LP0989721), Tianjin Research Project (10JCYBJC07500), and QCIS (Center for Quantum Computation and Intelligent Systems).
+
+\subsection{Citations}
+
+Citations within the text should include the author's last name and
+the year of publication, for example~\cite{gottlob:nonmon}.  Append
+lowercase letters to the year in cases of ambiguity.  Treat multiple
+authors as in the following examples:~\cite{abelson-et-al:scheme}
+or~\cite{bgf:Lixto} (for more than two authors) and
+\cite{brachman-schmolze:kl-one} (for two authors).  If the author
+portion of a citation is obvious, omit it, e.g.,
+Nebel~\shortcite{nebel:jair-2000}.  Collapse multiple citations as
+follows:~\cite{gls:hypertrees,levesque:functional-foundations}.
+\nocite{abelson-et-al:scheme}
+\nocite{bgf:Lixto}
+\nocite{brachman-schmolze:kl-one}
+\nocite{gottlob:nonmon}
+\nocite{gls:hypertrees}
+\nocite{levesque:functional-foundations}
+\nocite{levesque:belief}
+\nocite{nebel:jair-2000}
+
+\subsection{Footnotes}
+
+Place footnotes at the bottom of the page in a 9-point font.  Refer to
+them with superscript numbers.\footnote{This is how your footnotes
+should appear.} Separate them from the text by a short
+line.\footnote{Note the line separating these footnotes from the
+text.} Avoid footnotes as much as possible; they interrupt the flow of
+the text.
+
+\section{Illustrations}
+
+Place all illustrations (figures, drawings, tables, and photographs)
+throughout the paper at the places where they are first discussed,
+rather than at the end of the paper. If placed at the bottom or top of
+a page, illustrations may run across both columns.
+
+Illustrations must be rendered electronically or scanned and placed
+directly in your document. All illustrations should be in black and
+white, as color illustrations may cause problems. Line weights should
+be 1/2-point or thicker. Avoid screens and superimposing type on
+patterns as these effects may not reproduce well.
+
+Number illustrations sequentially. Use references of the following
+form: Figure 1, Table 2, etc. Place illustration numbers and captions
+under illustrations. Leave a margin of 1/4-inch around the area
+covered by the illustration and caption.  Use 9-point type for
+captions, labels, and other text in illustrations.
+
+\section*{Acknowledgments}
+
+The preparation of these instructions and the \LaTeX{} and Bib\TeX{}
+files that implement them was supported by Schlumberger Palo Alto
+Research, AT\&T Bell Laboratories, and Morgan Kaufmann Publishers.
+Preparation of the Microsoft Word file was supported by IJCAI.  An
+early version of this document was created by Shirley Jowell and Peter
+F. Patel-Schneider.  It was subsequently modified by Jennifer
+Ballentine and Thomas Dean, Bernhard Nebel, and Daniel Pagenstecher.
+These instructions are the same as the ones for IJCAI--05, prepared by
+Kurt Steinkraus, Massachusetts Institute of Technology, Computer
+Science and Artificial Intelligence Lab.
+
+\appendix
+
+\section{\LaTeX{} and Word Style Files}\label{stylefiles}
+
+The \LaTeX{} and Word style files are available on the IJCAI--13
+website, {\tt http://www.ijcai-13.org/}.
+These style files implement the formatting instructions in this
+document.
+
+The \LaTeX{} files are {\tt ijcai13.sty} and {\tt ijcai13.tex}, and
+the Bib\TeX{} files are {\tt named.bst} and {\tt ijcai13.bib}. The
+\LaTeX{} style file is for version 2e of \LaTeX{}, and the Bib\TeX{}
+style file is for version 0.99c of Bib\TeX{} ({\em not} version
+0.98i). The {\tt ijcai13.sty} file is the same as the {\tt
+ijcai07.sty} file used for IJCAI--07.
+
+The Microsoft Word style file consists of a single file, {\tt
+ijcai13.doc}. This template is the same as the one used for
+IJCAI--07.
+
+These Microsoft Word and \LaTeX{} files contain the source of the
+present document and may serve as a formatting sample.
+
+Further information on using these styles for the preparation of
+papers for IJCAI--13 can be obtained by contacting {\tt
+pcchair13@ijcai.org}.
+
+%% The file named.bst is a bibliography style file for BibTeX 0.99c
+\bibliographystyle{named}
+\bibliography{ijcai13}
+
+\end{document}
+
